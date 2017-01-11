@@ -1,0 +1,27 @@
+version: '2'
+services:
+  server:
+    build:
+      context: ./
+      dockerfile: Dockerfile-dev
+    ports:
+      - '3001:3001'
+    environment:
+      DB_USER: 'root'
+      DB_PASSWORD: 'slackwolf'
+      DB_NAME: 'slackwolf'
+      DB_HOST: 'mysql'
+    links:
+      - 'mysql'
+    volumes:
+      - './:/app'
+    depends_on:
+      - 'mysql'
+    command: 'sleep infinity'
+  mysql:
+    image: 'mysql:5.7.16'
+    ports:
+      - '3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=slackwolf
+      - MYSQL_DATABASE=slackwolf

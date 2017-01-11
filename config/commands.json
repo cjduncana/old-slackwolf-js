@@ -1,0 +1,38 @@
+{
+  "error": {
+    "alias": [],
+    "description": "",
+    "help": "",
+    "exclude": "true"
+  },
+  "join": {
+    "alias": [],
+    "description": "Join the lobby for the next game",
+    "help": "join",
+    "exclude": "false"
+  },
+  "kill": {
+    "alias": [],
+    "description": "Vote to kill a user each night",
+    "help": "kill #channel @user",
+    "exclude": "false"
+  },
+  "new": {
+    "alias": [],
+    "description": "Create a new lobby for players to join for the next game",
+    "help": "new",
+    "exclude": "false"
+  },
+  "see": {
+    "alias": [],
+    "description": "Find out if the user is a Villager or a Werewolf",
+    "help": "see #channel @user",
+    "exclude": "false"
+  },
+  "vote": {
+    "alias": [],
+    "description": "Vote for a Player, vote for no one, or clear your vote",
+    "help": "vote @user|noone|clear",
+    "exclude": "false"
+  }
+}

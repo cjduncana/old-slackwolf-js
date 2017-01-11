@@ -1,0 +1,49 @@
+{
+  "name": "slackwolf",
+  "version": "0.1.0",
+  "description": "A Slack bot that moderates Werewolf games",
+  "main": "index.js",
+  "scripts": {
+    "docker:bash": "docker exec -it `docker ps | grep slackwolf_server | awk '{print $1}'` bash",
+    "docker:init": "npm run docker:update && npm run docker:start && npm run docker:bash",
+    "docker:kill": "npm run docker:stop && npm run docker:rm",
+    "docker:mysql": "docker exec -it `docker ps | grep mysql | awk '{print $1}'` bash",
+    "docker:rm": "docker-compose -f docker-compose.yml rm -f",
+    "docker:start": "docker-compose -f docker-compose.yml up -d",
+    "docker:stop": "docker-compose -f docker-compose.yml kill",
+    "docker:update": "docker-compose -f docker-compose.yml pull",
+    "migrate": "scripts/migrate --up",
+    "migrate:down": "scripts/migrate --down",
+    "production": "scripts/wait_for_db && npm run migrate:up && NODE_ENV=production npm start",
+    "start": "node index.js",
+    "test": "NODE_ENV=test ./node_modules/mocha/bin/mocha 'tests/**/*.js'",
+    "test:debug": "NODE_ENV=test ./node_modules/mocha/bin/mocha -d 'tests/**/*.js'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cjduncana/slackwolf.git"
+  },
+  "keywords": [
+    "werewolf",
+    "slack"
+  ],
+  "author": "Christopher Duncan <cj.duncan.a@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cjduncana/slackwolf/issues"
+  },
+  "homepage": "https://github.com/cjduncana/slackwolf#readme",
+  "dependencies": {
+    "bluebird": "^3.4.7",
+    "mysql": "^2.12.0",
+    "request": "^2.79.0",
+    "request-promise": "^4.1.1",
+    "sequelize": "^3.29.0",
+    "slack-terminalize": "^1.0.2"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "sinon": "^1.17.7"
+  }
+}
