@@ -16,6 +16,14 @@ module.exports = function(db) {
       allowNull: false,
       get: function() {
         return '@' + this.getDataValue('username');
+      },
+      set: function(username) {
+        if (username.startsWith('@')) {
+          const formatted = username.slice(1, username.length);
+          this.setDataValue('username', formatted);
+        } else {
+          this.setDataValue('username', username);
+        }
       }
     }
   }, {

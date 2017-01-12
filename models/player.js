@@ -29,3 +29,10 @@ module.exports = function(db) {
 
   return Player;
 };
+
+module.exports.associations = function({ Player, User }) {
+  Player.belongsTo(User, {
+    as: 'user',
+    foreignKey: 'userId'
+  });
+};

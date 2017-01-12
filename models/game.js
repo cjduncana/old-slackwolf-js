@@ -20,25 +20,12 @@ module.exports = function(db) {
   }, {
     classMethods: {
       getGame: function(id) {
-        const Player = this.sequelize.models.Player;
-        const User = this.sequelize.models.User;
-
-        this.hasMany(Player, {
-          as: 'players',
-          foreignKey: 'gameId'
-        });
-
-        Player.belongsTo(User, {
-          as: 'user',
-          foreignKey: 'userId'
-        });
-
         return this.findById(id, {
           include: [{
-            model: Player,
+            model: this.sequelize.models.Player,
             as: 'players',
             include: [{
-              model: User,
+              model: this.sequelize.models.User,
               as: 'user'
             }]
           }]
@@ -58,4 +45,11 @@ module.exports = function(db) {
   });
 
   return Game;
+};
+
+module.exports.associations = function({ Game, Player }) {
+  Game.hasMany(Player, {
+    as: 'players',
+    foreignKey: 'gameId'
+  });
 };
