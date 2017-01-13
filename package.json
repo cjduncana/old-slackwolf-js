@@ -16,8 +16,8 @@
     "migrate:down": "scripts/migrate --down",
     "production": "scripts/wait_for_db && npm run migrate:up && NODE_ENV=production npm start",
     "start": "node index.js",
-    "test": "NODE_ENV=test ./node_modules/mocha/bin/mocha 'tests/**/*.js'",
-    "test:debug": "NODE_ENV=test ./node_modules/mocha/bin/mocha -d 'tests/**/*.js'"
+    "test": "scripts/run_tests",
+    "test:debug": "scripts/debug_tests"
   },
   "repository": {
     "type": "git",
@@ -35,12 +35,14 @@
   "homepage": "https://github.com/cjduncana/slackwolf#readme",
   "dependencies": {
     "bluebird": "^3.4.7",
+    "commander": "^2.9.0",
     "dotenv": "^4.0.0",
     "mysql": "^2.12.0",
     "request": "^2.79.0",
     "request-promise": "^4.1.1",
     "sequelize": "^3.29.0",
-    "slack-terminalize": "^1.0.2"
+    "slack-terminalize": "^1.0.2",
+    "umzug": "^1.11.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",

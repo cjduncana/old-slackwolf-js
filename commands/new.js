@@ -5,11 +5,11 @@ const Promise = require('bluebird');
 const Slack = require('../lib/slack');
 const Models = require('../lib/models');
 
-const { Channel, Game, User } = Models.getModels();
+module.exports = function({ args = [], channel: channelId, user: userId }) {
+  const { Channel, Game, User } = Models.getModels();
 
-module.exports = function({ args, channel: channelId, user: userId }) {
   if (args.length || !channelId || !userId) {
-    return false;
+    return Promise.resolve(false);
   }
 
   return Promise.props({
@@ -21,10 +21,9 @@ module.exports = function({ args, channel: channelId, user: userId }) {
   })
   .then(({ channelId }) => {
     Slack.newGameCreated(channelId);
-    return;
+    return true;
   })
   .catch((err) => {
-    console.log(err);
-    return;
+    return err;
   });
 };

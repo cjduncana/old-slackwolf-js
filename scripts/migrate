@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+
+'use strict';
+
+const migration = require('../lib/migrations');
+const program = require('commander');
+
+// define options
+program.version('0.1.0')
+.option('-u, --up', 'Run pending migrations')
+.option('-d, --down', 'Revert to the previous migration')
+.option('-t, --to [migration_name]', 'Run/revert migrations of to given [migration_name]')
+.parse(process.argv);
+
+let action;
+if (program.up) {
+  action = migration.up;
+} else if (program.down) {
+  action = migration.down;
+} else {
+  return process.exit(0);
+}
+
+const params = (program.to) ? {to: program.to} : null;
+
+return action.call(migration, params)
+.then((migrations) => {
+  return process.exit(0);
+})
+.catch(() => {
+  return process.exit(1);
+});

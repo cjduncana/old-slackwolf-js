@@ -4,7 +4,7 @@ const chai = require('chai');
 const fs = require('fs');
 const path = require('path');
 
-const database = require('../lib/database');
+const Server = require('../lib/server');
 
 const Commands = {};
 
@@ -14,14 +14,10 @@ fs.readdirSync(pathToCommands).forEach((filename) => {
   Commands[intoTitle(filename)] = require(`${pathToCommands}/${filename}`);
 });
 
-database.initialize()
-.then((Models) => {
-  Object.assign(global, { Models });
-});
-
 Object.assign(global, {
   expect: chai.expect,
-  Commands
+  Commands,
+  Server
 });
 
 function intoTitle(filename) {
