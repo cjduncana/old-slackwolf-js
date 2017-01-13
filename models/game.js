@@ -2,6 +2,8 @@
 
 const Sequelize = require('sequelize');
 
+const Errors = require('../lib/errors');
+
 module.exports = function(db) {
   const Game = db.define('Game', {
     id: {
@@ -16,6 +18,11 @@ module.exports = function(db) {
     channelId: {
       type: Sequelize.STRING,
       allowNull: false
+    },
+    status: {
+      type: Sequelize.ENUM('Open', 'Active', 'Closed'),
+      allowNull: false,
+      defaultValue: 'Open'
     }
   }, {
     classMethods: {
@@ -33,11 +40,25 @@ module.exports = function(db) {
       },
 
       getCurrentGame: function(channelId) {
-        return this.findOne({ where: { channelId } });
+        return this.findOne({
+          where: {
+            channelId,
+            status: { $ne: 'Closed' }
+          }
+        });
       },
 
       newGame: function(initiatorId, channelId) {
-        return this.create({ initiatorId, channelId });
+        return this.getCurrentGame(channelId)
+        .then((game) => {
+          if (game.status === 'Open') {
+            throw new Errors.ExistingOpenGameError(channelId);
+          } else if (game.status === 'Active') {
+            throw new Errors.ExistingActiveGameError(channelId);
+          }
+
+          return this.create({ initiatorId, channelId });
+        });
       }
     },
 

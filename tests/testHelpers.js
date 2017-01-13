@@ -3,6 +3,7 @@
 const chai = require('chai');
 const fs = require('fs');
 const path = require('path');
+const Promise = require('bluebird');
 
 const Server = require('../lib/server');
 
@@ -14,8 +15,18 @@ fs.readdirSync(pathToCommands).forEach((filename) => {
   Commands[intoTitle(filename)] = require(`${pathToCommands}/${filename}`);
 });
 
+function destroyAll(instances) {
+  return Promise.each(instances, (instance) => {
+    if (!instance.destroy) {
+      throw new Error('Instance does not have a destroy function');
+    }
+    return instance.destroy();
+  });
+}
+
 Object.assign(global, {
   expect: chai.expect,
+  destroyAll,
   Commands,
   Server
 });
