@@ -11,11 +11,11 @@ module.exports = function(db) {
       defaultValue: Sequelize.UUIDV4,
       primaryKey: true
     },
-    initiatorId: {
+    channelId: {
       type: Sequelize.STRING,
       allowNull: false
     },
-    channelId: {
+    initiatorId: {
       type: Sequelize.STRING,
       allowNull: false
     },
@@ -48,16 +48,18 @@ module.exports = function(db) {
         });
       },
 
-      newGame: function(initiatorId, channelId) {
+      newGame: function(channelId, initiatorId) {
         return this.getCurrentGame(channelId)
         .then((game) => {
-          if (game.status === 'Open') {
-            throw new Errors.ExistingOpenGameError(channelId);
-          } else if (game.status === 'Active') {
-            throw new Errors.ExistingActiveGameError(channelId);
+          if (game) {
+            if (game.status === 'Active') {
+              throw new Errors.ExistingActiveGameError();
+            } else if (game.status === 'Open') {
+              throw new Errors.ExistingOpenGameError();
+            }
           }
 
-          return this.create({ initiatorId, channelId });
+          return this.create({ channelId, initiatorId });
         });
       }
     },

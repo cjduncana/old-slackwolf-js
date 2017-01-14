@@ -4,6 +4,7 @@ const chai = require('chai');
 const fs = require('fs');
 const path = require('path');
 const Promise = require('bluebird');
+const sinon = require('sinon');
 
 const Server = require('../lib/server');
 
@@ -27,6 +28,7 @@ function destroyAll(instances) {
 Object.assign(global, {
   expect: chai.expect,
   destroyAll,
+  sinon,
   Commands,
   Server
 });

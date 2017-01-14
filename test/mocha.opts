@@ -1,0 +1,4 @@
+--colors
+--reporter dot
+--ui bdd
+--recursive

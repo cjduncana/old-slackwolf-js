@@ -4,6 +4,8 @@
   "description": "A Slack bot that moderates Werewolf games",
   "main": "index.js",
   "scripts": {
+    "coverage": "scripts/run_coverage",
+    "coverage:open": "scripts/open_coverage",
     "docker:bash": "docker exec -it `docker ps | grep slackwolf_server | awk '{print $1}'` bash",
     "docker:init": "npm run docker:update && npm run docker:start && npm run docker:bash",
     "docker:kill": "npm run docker:stop && npm run docker:rm",
@@ -39,15 +41,15 @@
     "dotenv": "^4.0.0",
     "error-factory": "^0.1.6",
     "mysql": "^2.12.0",
-    "request": "^2.79.0",
-    "request-promise": "^4.1.1",
     "sequelize": "^3.29.0",
     "slack-terminalize": "^1.0.2",
     "umzug": "^1.11.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
+    "open": "0.0.5",
     "sinon": "^1.17.7"
   }
 }

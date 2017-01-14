@@ -14,26 +14,30 @@ module.exports = function({ args = [], channel: channelId, user: userId }) {
   }
 
   return Promise.props({
-    initiator: User.getUser(userId),
-    channel: Channel.getChannel(channelId)
+    channel: Channel.getChannel(channelId),
+    initiator: User.getUser(userId)
   })
-  .then(({ initiator, channel }) => {
-    return Game.newGame(initiator.id, channel.id);
+  .then(({ channel, initiator }) => {
+    return Game.newGame(channel.id, initiator.id);
   })
-  .then(({ channelId }) => {
+  .then(() => {
     Slack.newGameCreated(channelId);
-    return true;
+    return 'A game was created.';
   })
-  .catch(Errors.ExistingActiveGameError, ({ message: channelId }) => {
+  .catch(Errors.ChannelNotFoundError, () => {
+    Slack.newFromDirectMessages(channelId);
+    return 'Tried to create a game from the direct messages.';
+  })
+  .catch(Errors.ExistingActiveGameError, () => {
     Slack.activeGameAlreadyExists(channelId);
-    return false;
+    return 'An active game already exists.';
   })
-  .catch(Errors.ExistingOpenGameError, ({ message: channelId }) => {
+  .catch(Errors.ExistingOpenGameError, () => {
     Slack.openGameAlreadyExists(channelId);
-    return false;
+    return 'An open game already exists.';
   })
   .catch((err) => {
-    return err;
+    return `The following error was encountered: "${err.message}".`;
   });
 };
 
