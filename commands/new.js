@@ -3,14 +3,17 @@
 const Promise = require('bluebird');
 
 const Errors = require('../lib/errors');
-const Slack = require('../lib/slack');
 const Models = require('../lib/models');
+const Server = require('../lib/server');
+const Slack = require('../lib/slack');
 
 module.exports = function({ args = [], channel: channelId, user: userId }) {
+  const log = Server.getLogger();
   const { Channel, Game, User } = Models.getModels();
 
   if (args.length || !channelId || !userId) {
-    return constructErrorMessage(args.length, !channelId, !userId);
+    log.error(constructErrorMessage(args.length, !channelId, !userId));
+    return Promise.resolve();
   }
 
   return Promise.props({
@@ -18,26 +21,26 @@ module.exports = function({ args = [], channel: channelId, user: userId }) {
     initiator: User.getUser(userId)
   })
   .then(({ channel, initiator }) => {
-    return Game.newGame(channel.id, initiator.id);
+    return Game.createGame(channel.id, initiator.id);
   })
-  .then(() => {
+  .then(({ initiatorId }) => {
     Slack.newGameCreated(channelId);
-    return 'A game was created.';
+    return log.info(`A game was created by ${initiatorId}.`);
   })
   .catch(Errors.ChannelNotFoundError, () => {
     Slack.newFromDirectMessages(channelId);
-    return 'Tried to create a game from the direct messages.';
+    return log.error('Tried to create a game from the direct messages.');
   })
   .catch(Errors.ExistingActiveGameError, () => {
     Slack.activeGameAlreadyExists(channelId);
-    return 'An active game already exists.';
+    return log.error('An active game already exists.');
   })
   .catch(Errors.ExistingOpenGameError, () => {
     Slack.openGameAlreadyExists(channelId);
-    return 'An open game already exists.';
+    return log.error('An open game already exists.');
   })
   .catch((err) => {
-    return `The following error was encountered: "${err.message}".`;
+    return log.error(`The following error was encountered: "${err.message}".`);
   });
 };
 
@@ -71,5 +74,5 @@ function constructErrorMessage(hasArguments, missingChannel, missingUser) {
     message.push(lastError + '.');
   }
 
-  return Promise.resolve(message.join(''));
+  return message.join('');
 }

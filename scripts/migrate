@@ -2,8 +2,11 @@
 
 'use strict';
 
-const migration = require('../lib/migrations');
 const program = require('commander');
+
+const migration = require('../lib/migrations');
+
+const log = require('../lib/logger')();
 
 // define options
 program.version('0.1.0')
@@ -18,6 +21,7 @@ if (program.up) {
 } else if (program.down) {
   action = migration.down;
 } else {
+  log.info('No migrations performed.');
   return process.exit(0);
 }
 
@@ -25,8 +29,14 @@ const params = (program.to) ? {to: program.to} : null;
 
 return action.call(migration, params)
 .then((migrations) => {
+  if (!migrations.length) {
+    log.info('There are no pending migrations.');
+  } else {
+    log.info(`Ran ${migrations.length} migration${migrations.length > 1 ? 's' : ''} successfully.`);
+  }
   return process.exit(0);
 })
-.catch(() => {
+.catch((err) => {
+  log.error(err.stack);
   return process.exit(1);
 });

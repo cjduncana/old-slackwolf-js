@@ -14,6 +14,9 @@ const { New } = Commands;
 
 let Models;
 
+let logInfoStub;
+let logErrorStub;
+
 let getChannelInfoStub;
 let getUserInfoStub;
 let newGameCreatedStub;
@@ -22,8 +25,6 @@ let activeGameAlreadyExistsStub;
 let openGameAlreadyExistsStub;
 
 describe('New Command', () => {
-  let fakeClock;
-
   const validCommand = {
     args: [],
     channel: 'C6894674734',
@@ -31,8 +32,6 @@ describe('New Command', () => {
   };
 
   before((done) => {
-    fakeClock = sinon.useFakeTimers('Date');
-
     getChannelInfoStub = sinon.stub(Slack, 'getChannelInfo');
     getChannelInfoStub.returns(Promise.reject('not_authed'));
 
@@ -56,13 +55,18 @@ describe('New Command', () => {
     openGameAlreadyExistsStub = sinon.stub(Slack, 'openGameAlreadyExists');
 
     Server.start()
-    .then((models) => {
+    .then(({ logger, models }) => {
+      logInfoStub = sinon.stub(logger, 'info');
+      logErrorStub = sinon.stub(logger, 'error');
+
       Models = models;
       return done();
     });
   });
 
   beforeEach((done) => {
+    logInfoStub.reset();
+    logErrorStub.reset();
     newGameCreatedStub.reset();
     newFromDirectMessagesStub.reset();
     activeGameAlreadyExistsStub.reset();
@@ -74,7 +78,8 @@ describe('New Command', () => {
   });
 
   after((done) => {
-    fakeClock.restore();
+    logInfoStub.restore();
+    logErrorStub.restore();
     getChannelInfoStub.restore();
     getUserInfoStub.restore();
     newGameCreatedStub.restore();
@@ -91,16 +96,23 @@ describe('New Command', () => {
 
     it('should start a new Game if the New command was given', (done) => {
       New(validCommand)
-      .then((response) => {
-        expect(response).to.be.equal('A game was created.');
-
-        stubsWerentCalled({ newGameCreated: true });
+      .then(() => {
+        checkStubsOtherThanThese({
+          newGameCreated: true,
+          logInfo: true
+        });
 
         // New Game Created was called exactly once
         expect(newGameCreatedStub.args).to.have.lengthOf(1);
         // The first time New Game Created was called it only had one argument
         expect(newGameCreatedStub.args[0]).to.have.lengthOf(1);
         expect(newGameCreatedStub.args[0][0]).to.be.equal('C6894674734');
+
+        // Log Info was called exactly once
+        expect(logInfoStub.args).to.have.lengthOf(1);
+        // The first time Log Info was called it only had one argument
+        expect(logInfoStub.args[0]).to.have.lengthOf(1);
+        expect(logInfoStub.args[0][0]).to.be.equal('A game was created by U9221481298.');
 
         return getAllObjects();
       })
@@ -140,12 +152,16 @@ describe('New Command', () => {
       getChannelStub.returns(Promise.reject(new Error('Error in New')));
 
       New(validCommand)
-      .then((response) => {
-        expect(response).to.be.equal('The following error was encountered: "Error in New".');
-
-        stubsWerentCalled();
-
+      .then(() => {
         getChannelStub.restore();
+
+        checkStubsOtherThanThese({ logError: true });
+
+        // Log Error was called exactly once
+        expect(logErrorStub.args).to.have.lengthOf(1);
+        // The first time Log Error was called it only had one argument
+        expect(logErrorStub.args[0]).to.have.lengthOf(1);
+        expect(logErrorStub.args[0][0]).to.be.equal('The following error was encountered: "Error in New".');
 
         return checkForEmptyDatabase(done);
       })
@@ -158,16 +174,23 @@ describe('New Command', () => {
       });
 
       New(invalidCommand)
-      .then((response) => {
-        expect(response).to.be.equal('Tried to create a game from the direct messages.');
-
-        stubsWerentCalled({ newFromDirectMessages: true });
+      .then(() => {
+        checkStubsOtherThanThese({
+          newFromDirectMessages: true,
+          logError: true
+        });
 
         // New From Direct Messages was called exactly once
         expect(newFromDirectMessagesStub.args).to.have.lengthOf(1);
         // The first time New From Direct Messages was called it only had one argument
         expect(newFromDirectMessagesStub.args[0]).to.have.lengthOf(1);
         expect(newFromDirectMessagesStub.args[0][0]).to.be.equal('C1285498827');
+
+        // Log Error was called exactly once
+        expect(logErrorStub.args).to.have.lengthOf(1);
+        // The first time Log Error was called it only had one argument
+        expect(logErrorStub.args[0]).to.have.lengthOf(1);
+        expect(logErrorStub.args[0][0]).to.be.equal('Tried to create a game from the direct messages.');
 
         return checkForEmptyDatabase(done);
       })
@@ -183,16 +206,23 @@ describe('New Command', () => {
 
       Models.Game.create(sampleGame)
       .then(() => New(validCommand))
-      .then((response) => {
-        expect(response).to.be.equal('An active game already exists.');
-
-        stubsWerentCalled({ activeGameAlreadyExists: true });
+      .then(() => {
+        checkStubsOtherThanThese({
+          activeGameAlreadyExists: true,
+          logError: true
+        });
 
         // Active Game Already Exists was called exactly once
         expect(activeGameAlreadyExistsStub.args).to.have.lengthOf(1);
         // The first time Active Game Already Exists was called it only had one argument
         expect(activeGameAlreadyExistsStub.args[0]).to.have.lengthOf(1);
         expect(activeGameAlreadyExistsStub.args[0][0]).to.be.equal('C6894674734');
+
+        // Log Error was called exactly once
+        expect(logErrorStub.args).to.have.lengthOf(1);
+        // The first time Log Error was called it only had one argument
+        expect(logErrorStub.args[0]).to.have.lengthOf(1);
+        expect(logErrorStub.args[0][0]).to.be.equal('An active game already exists.');
 
         return getAllObjects();
       })
@@ -233,16 +263,23 @@ describe('New Command', () => {
 
       Models.Game.create(sampleGame)
       .then(() => New(validCommand))
-      .then((response) => {
-        expect(response).to.be.equal('An open game already exists.');
-
-        stubsWerentCalled({ openGameAlreadyExists: true });
+      .then(() => {
+        checkStubsOtherThanThese({
+          openGameAlreadyExists: true,
+          logError: true
+        });
 
         // Open Game Already Exists was called exactly once
         expect(openGameAlreadyExistsStub.args).to.have.lengthOf(1);
         // The first time Open Game Already Exists was called it only had one argument
         expect(openGameAlreadyExistsStub.args[0]).to.have.lengthOf(1);
         expect(openGameAlreadyExistsStub.args[0][0]).to.be.equal('C6894674734');
+
+        // Log Error was called exactly once
+        expect(logErrorStub.args).to.have.lengthOf(1);
+        // The first time Log Error was called it only had one argument
+        expect(logErrorStub.args[0]).to.have.lengthOf(1);
+        expect(logErrorStub.args[0][0]).to.be.equal('An open game already exists.');
 
         return getAllObjects();
       })
@@ -282,10 +319,14 @@ describe('New Command', () => {
         });
 
         New(invalidCommand)
-        .then((response) => {
-          expect(response).to.be.equal('The following error was encountered: arguments were given to this command.');
+        .then(() => {
+          checkStubsOtherThanThese({ logError: true });
 
-          stubsWerentCalled();
+          // Log Error was called exactly once
+          expect(logErrorStub.args).to.have.lengthOf(1);
+          // The first time Log Error was called it only had one argument
+          expect(logErrorStub.args[0]).to.have.lengthOf(1);
+          expect(logErrorStub.args[0][0]).to.be.equal('The following error was encountered: arguments were given to this command.');
 
           return checkForEmptyDatabase(done);
         })
@@ -297,10 +338,14 @@ describe('New Command', () => {
         delete invalidCommand.channel;
 
         New(invalidCommand)
-        .then((response) => {
-          expect(response).to.be.equal('The following error was encountered: no Channel ID was provided.');
+        .then(() => {
+          checkStubsOtherThanThese({ logError: true });
 
-          stubsWerentCalled();
+          // Log Error was called exactly once
+          expect(logErrorStub.args).to.have.lengthOf(1);
+          // The first time Log Error was called it only had one argument
+          expect(logErrorStub.args[0]).to.have.lengthOf(1);
+          expect(logErrorStub.args[0][0]).to.be.equal('The following error was encountered: no Channel ID was provided.');
 
           return checkForEmptyDatabase(done);
         })
@@ -312,10 +357,14 @@ describe('New Command', () => {
         delete invalidCommand.user;
 
         New(invalidCommand)
-        .then((response) => {
-          expect(response).to.be.equal('The following error was encountered: no User ID was provided.');
+        .then(() => {
+          checkStubsOtherThanThese({ logError: true });
 
-          stubsWerentCalled();
+          // Log Error was called exactly once
+          expect(logErrorStub.args).to.have.lengthOf(1);
+          // The first time Log Error was called it only had one argument
+          expect(logErrorStub.args[0]).to.have.lengthOf(1);
+          expect(logErrorStub.args[0][0]).to.be.equal('The following error was encountered: no User ID was provided.');
 
           return checkForEmptyDatabase(done);
         })
@@ -330,10 +379,14 @@ describe('New Command', () => {
           });
 
           New(invalidCommand)
-          .then((response) => {
-            expect(response).to.be.equal('The following error was encountered: arguments were given to this command.');
+          .then(() => {
+            checkStubsOtherThanThese({ logError: true });
 
-            stubsWerentCalled();
+            // Log Error was called exactly once
+            expect(logErrorStub.args).to.have.lengthOf(1);
+            // The first time Log Error was called it only had one argument
+            expect(logErrorStub.args[0]).to.have.lengthOf(1);
+            expect(logErrorStub.args[0][0]).to.be.equal('The following error was encountered: arguments were given to this command.');
 
             return checkForEmptyDatabase(done);
           })
@@ -347,10 +400,14 @@ describe('New Command', () => {
           delete invalidCommand.channel;
 
           New(invalidCommand)
-          .then((response) => {
-            expect(response).to.be.equal('The following errors were encountered: arguments were given to this command and no Channel ID was provided.');
+          .then(() => {
+            checkStubsOtherThanThese({ logError: true });
 
-            stubsWerentCalled();
+            // Log Error was called exactly once
+            expect(logErrorStub.args).to.have.lengthOf(1);
+            // The first time Log Error was called it only had one argument
+            expect(logErrorStub.args[0]).to.have.lengthOf(1);
+            expect(logErrorStub.args[0][0]).to.be.equal('The following errors were encountered: arguments were given to this command and no Channel ID was provided.');
 
             return checkForEmptyDatabase(done);
           })
@@ -363,10 +420,14 @@ describe('New Command', () => {
           };
 
           New(invalidCommand)
-          .then((response) => {
-            expect(response).to.be.equal('The following errors were encountered: arguments were given to this command, no Channel ID was provided, and no User ID was provided.');
+          .then(() => {
+            checkStubsOtherThanThese({ logError: true });
 
-            stubsWerentCalled();
+            // Log Error was called exactly once
+            expect(logErrorStub.args).to.have.lengthOf(1);
+            // The first time Log Error was called it only had one argument
+            expect(logErrorStub.args[0]).to.have.lengthOf(1);
+            expect(logErrorStub.args[0][0]).to.be.equal('The following errors were encountered: arguments were given to this command, no Channel ID was provided, and no User ID was provided.');
 
             return checkForEmptyDatabase(done);
           })
@@ -410,11 +471,15 @@ function getAllObjects() {
   });
 }
 
-// This might be counterintuitive name
-// What is passed in the options as true are the methods that were called
-// Therefore this function would not evaluate it
-// Suggestions to change the name or interface would be appreciated
-function stubsWerentCalled(options = {}) {
+function checkStubsOtherThanThese(options = {}) {
+  if (!options.logInfo) {
+    expect(logInfoStub.args).to.have.lengthOf(0);
+  }
+
+  if (!options.logError) {
+    expect(logErrorStub.args).to.have.lengthOf(0);
+  }
+
   if (!options.newGameCreated) {
     // New Game Created has not been called
     expect(newGameCreatedStub.args).to.have.lengthOf(0);

@@ -14,10 +14,10 @@
     "docker:start": "docker-compose -f docker-compose.yml up -d",
     "docker:stop": "docker-compose -f docker-compose.yml kill",
     "docker:update": "docker-compose -f docker-compose.yml pull",
-    "migrate": "scripts/migrate --up",
-    "migrate:down": "scripts/migrate --down",
+    "migrate": "scripts/migrate --up | node_modules/.bin/bunyan",
+    "migrate:down": "scripts/migrate --down | node_modules/.bin/bunyan",
     "production": "scripts/wait_for_db && npm run migrate:up && NODE_ENV=production npm start",
-    "start": "node index.js",
+    "start": "node index.js | node_modules/.bin/bunyan",
     "test": "scripts/run_tests",
     "test:debug": "scripts/debug_tests"
   },
@@ -37,6 +37,7 @@
   "homepage": "https://github.com/cjduncana/slackwolf#readme",
   "dependencies": {
     "bluebird": "^3.4.7",
+    "bunyan": "^1.8.5",
     "commander": "^2.9.0",
     "dotenv": "^4.0.0",
     "error-factory": "^0.1.6",

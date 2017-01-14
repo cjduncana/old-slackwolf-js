@@ -48,7 +48,7 @@ module.exports = function(db) {
         });
       },
 
-      newGame: function(channelId, initiatorId) {
+      createGame: function(channelId, initiatorId) {
         return this.getCurrentGame(channelId)
         .then((game) => {
           if (game) {
