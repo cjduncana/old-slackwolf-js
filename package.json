@@ -16,7 +16,6 @@
     "docker:update": "docker-compose -f docker-compose.yml pull",
     "migrate": "scripts/migrate --up | node_modules/.bin/bunyan",
     "migrate:down": "scripts/migrate --down | node_modules/.bin/bunyan",
-    "production": "scripts/wait_for_db && npm run migrate:up && NODE_ENV=production npm start",
     "start": "node index.js | node_modules/.bin/bunyan",
     "test": "scripts/run_tests",
     "test:debug": "scripts/debug_tests"
