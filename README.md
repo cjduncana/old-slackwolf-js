@@ -4,17 +4,17 @@ A Slack bot that moderates Werewolf games.
 
 ## Quick Start
 
-To use this code you will need [Node.js][node] and [Docker][docker]. This code
-has been tested on Node.js v6.0.0 and Docker v1.11.1. After starting the Docker
-machine, do the following:
+To use this code you will need [Node.js][node] and [Docker][docker].
+This code has been tested on Node.js v6.0.0 and Docker v1.11.1.
+After starting the Docker machine, do the following:
 
 ``` bash
 $ npm run docker:init
 ```
 
 This will upgrade the Docker containers to their latest version, start all the
-containers, and log you into the Slackwolf container. Once inside, download all
-the dependencies from npm.
+containers, and log you into the Slackwolf container.
+Once inside, download all the dependencies from npm.
 
 ``` bash
 $ npm install
