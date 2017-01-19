@@ -17,11 +17,12 @@ let Models;
 let logInfoStub;
 let logErrorStub;
 
+let activeGameAlreadyExistsStub;
 let getChannelInfoStub;
 let getUserInfoStub;
 let newGameCreatedStub;
 let newFromDirectMessagesStub;
-let activeGameAlreadyExistsStub;
+let newPlayerJoinedStub;
 let openGameAlreadyExistsStub;
 
 describe('New Command', () => {
@@ -49,9 +50,10 @@ describe('New Command', () => {
     getUserInfoStub.withArgs('U9221481298')
       .returns(Promise.resolve(user));
 
+    activeGameAlreadyExistsStub = sinon.stub(Slack, 'activeGameAlreadyExists');
     newGameCreatedStub = sinon.stub(Slack, 'newGameCreated');
     newFromDirectMessagesStub = sinon.stub(Slack, 'newFromDirectMessages');
-    activeGameAlreadyExistsStub = sinon.stub(Slack, 'activeGameAlreadyExists');
+    newPlayerJoinedStub = sinon.stub(Slack, 'newPlayerJoined');
     openGameAlreadyExistsStub = sinon.stub(Slack, 'openGameAlreadyExists');
 
     Server.start()
@@ -65,11 +67,12 @@ describe('New Command', () => {
   });
 
   beforeEach((done) => {
+    activeGameAlreadyExistsStub.reset();
     logInfoStub.reset();
     logErrorStub.reset();
     newGameCreatedStub.reset();
     newFromDirectMessagesStub.reset();
-    activeGameAlreadyExistsStub.reset();
+    newPlayerJoinedStub.reset();
     openGameAlreadyExistsStub.reset();
 
     cleanDatabase()
@@ -78,13 +81,14 @@ describe('New Command', () => {
   });
 
   after((done) => {
+    activeGameAlreadyExistsStub.restore();
     logInfoStub.restore();
     logErrorStub.restore();
     getChannelInfoStub.restore();
     getUserInfoStub.restore();
     newGameCreatedStub.restore();
     newFromDirectMessagesStub.restore();
-    activeGameAlreadyExistsStub.restore();
+    newPlayerJoinedStub.restore();
     openGameAlreadyExistsStub.restore();
 
     cleanDatabase()
@@ -99,6 +103,7 @@ describe('New Command', () => {
       .then(() => {
         checkStubsOtherThanThese({
           newGameCreated: true,
+          newPlayerJoined: true,
           logInfo: true
         });
 
@@ -107,6 +112,18 @@ describe('New Command', () => {
         // The first time New Game Created was called it only had one argument
         expect(newGameCreatedStub.args[0]).to.have.lengthOf(1);
         expect(newGameCreatedStub.args[0][0]).to.be.equal('C6894674734');
+
+        // New Player Joined was called exactly once
+        expect(newPlayerJoinedStub.args).to.have.lengthOf(1);
+        // The first time New Player Joined was called it only had two arguments
+        expect(newPlayerJoinedStub.args[0]).to.have.lengthOf(2);
+        expect(newPlayerJoinedStub.args[0][0]).to.be.equal('C6894674734');
+
+        expect(newPlayerJoinedStub.args[0][1]).to.be.instanceof(Array);
+        const players = newPlayerJoinedStub.args[0][1];
+        expect(players).to.have.lengthOf(1);
+        const [player] = players;
+        expect(player.user.username).to.equal('@johndoe');
 
         // Log Info was called exactly once
         expect(logInfoStub.args).to.have.lengthOf(1);
@@ -130,7 +147,11 @@ describe('New Command', () => {
         expect(game.initiatorId).to.be.equal('U9221481298');
         expect(game.status).to.be.equal('Open');
 
-        expect(players).to.have.lengthOf(0);
+        expect(players).to.have.lengthOf(1);
+
+        const [player] = players;
+        expect(player.userId).to.be.equal('U9221481298');
+        expect(player.gameId).to.be.equal(game.id);
 
         expect(users).to.have.lengthOf(1);
 
@@ -240,7 +261,7 @@ describe('New Command', () => {
         expect(game.initiatorId).to.be.equal('U0079555710');
         expect(game.status).to.be.equal('Active');
 
-        expect(players).to.have.lengthOf(0);
+        expect(players).to.be.empty;
 
         expect(users).to.have.lengthOf(1);
 
@@ -297,7 +318,7 @@ describe('New Command', () => {
         expect(game.initiatorId).to.be.equal('U2681058991');
         expect(game.status).to.be.equal('Open');
 
-        expect(players).to.have.lengthOf(0);
+        expect(players).to.be.empty;
 
         expect(users).to.have.lengthOf(1);
 
@@ -453,10 +474,10 @@ function cleanDatabase() {
 function checkForEmptyDatabase(done) {
   return getAllObjects()
   .then(({ channels, games, players, users }) => {
-    expect(channels).to.have.lengthOf(0);
-    expect(games).to.have.lengthOf(0);
-    expect(players).to.have.lengthOf(0);
-    expect(users).to.have.lengthOf(0);
+    expect(channels).to.be.empty;
+    expect(games).to.be.empty;
+    expect(players).to.be.empty;
+    expect(users).to.be.empty;
 
     return done();
   });
@@ -472,31 +493,31 @@ function getAllObjects() {
 }
 
 function checkStubsOtherThanThese(options = {}) {
+  if (!options.activeGameAlreadyExists) {
+    expect(activeGameAlreadyExistsStub.args).to.be.empty;
+  }
+
   if (!options.logInfo) {
-    expect(logInfoStub.args).to.have.lengthOf(0);
+    expect(logInfoStub.args).to.be.empty;
   }
 
   if (!options.logError) {
-    expect(logErrorStub.args).to.have.lengthOf(0);
+    expect(logErrorStub.args).to.be.empty;
   }
 
   if (!options.newGameCreated) {
-    // New Game Created has not been called
-    expect(newGameCreatedStub.args).to.have.lengthOf(0);
+    expect(newGameCreatedStub.args).to.be.empty;
   }
 
   if (!options.newFromDirectMessages) {
-    // New From Direct Messages has not been called
-    expect(newFromDirectMessagesStub.args).to.have.lengthOf(0);
+    expect(newFromDirectMessagesStub.args).to.be.empty;
   }
 
-  if (!options.activeGameAlreadyExists) {
-    // Active Game Already Exists has not been called
-    expect(activeGameAlreadyExistsStub.args).to.have.lengthOf(0);
+  if (!options.newPlayerJoined) {
+    expect(newPlayerJoinedStub.args).to.be.empty;
   }
 
   if (!options.openGameAlreadyExists) {
-    // Open Game Already Exists has not been called
-    expect(openGameAlreadyExistsStub.args).to.have.lengthOf(0);
+    expect(openGameAlreadyExistsStub.args).to.be.empty;
   }
 }

@@ -9,7 +9,7 @@ const Slack = require('../lib/slack');
 
 module.exports = function({ args = [], channel: channelId, user: userId }) {
   const log = Server.getLogger();
-  const { Channel, Game, User } = Models.getModels();
+  const { Channel, Game, Player, User } = Models.getModels();
 
   if (args.length || !channelId || !userId) {
     log.error(constructErrorMessage(args.length, !channelId, !userId));
@@ -23,9 +23,16 @@ module.exports = function({ args = [], channel: channelId, user: userId }) {
   .then(({ channel, initiator }) => {
     return Game.createGame(channel.id, initiator.id);
   })
-  .then(({ initiatorId }) => {
+  .then(({ id, channelId, initiatorId }) => {
     Slack.newGameCreated(channelId);
-    return log.info(`A game was created by ${initiatorId}.`);
+    return Player.createPlayer(id, initiatorId);
+  })
+  .then((player) => {
+    return player.getUser();
+  })
+  .then((user) => {
+    Slack.newPlayerJoined(channelId, [{ user }]);
+    return log.info(`A game was created by ${user.id}.`);
   })
   .catch(Errors.ChannelNotFoundError, () => {
     Slack.newFromDirectMessages(channelId);
