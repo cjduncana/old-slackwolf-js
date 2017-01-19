@@ -16,6 +16,7 @@
     "docker:update": "docker-compose -f docker-compose.yml pull",
     "migrate": "scripts/migrate --up | node_modules/.bin/bunyan",
     "migrate:down": "scripts/migrate --down | node_modules/.bin/bunyan",
+    "migrate:zero": "scripts/migrate --down --to 0 | node_modules/.bin/bunyan",
     "start": "node index.js | node_modules/.bin/bunyan",
     "test": "scripts/run_tests",
     "test:debug": "scripts/debug_tests"
