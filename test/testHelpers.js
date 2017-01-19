@@ -8,6 +8,8 @@ const sinon = require('sinon');
 
 const Server = require('../lib/server');
 
+require('sinon-as-promised')(Promise);
+
 const Commands = {};
 
 const pathToCommands = path.normalize(__dirname + '/../commands/');

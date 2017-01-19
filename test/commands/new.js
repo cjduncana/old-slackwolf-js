@@ -4,9 +4,6 @@ require('../testHelpers');
 
 const Promise = require('bluebird');
 
-// Remove unhandled promise errors from bluebird
-Promise.onPossiblyUnhandledRejection(() => {});
-
 const Errors = require('../../lib/errors');
 const Slack = require('../../lib/slack');
 
@@ -34,21 +31,21 @@ describe('New Command', () => {
 
   before((done) => {
     getChannelInfoStub = sinon.stub(Slack, 'getChannelInfo');
-    getChannelInfoStub.returns(Promise.reject('not_authed'));
+    getChannelInfoStub.rejects('not_authed');
 
     const channel = { id: 'C6894674734', name: 'the-channel' };
     getChannelInfoStub.withArgs('C6894674734')
-      .returns(Promise.resolve(channel));
+      .resolves(channel);
 
     getChannelInfoStub.withArgs('C1285498827')
-      .returns(Promise.reject(new Errors.ChannelNotFoundError()));
+      .rejects(new Errors.ChannelNotFoundError());
 
     getUserInfoStub = sinon.stub(Slack, 'getUserInfo');
-    getUserInfoStub.returns(Promise.reject('not_authed'));
+    getUserInfoStub.rejects('not_authed');
 
     const user = { id: 'U9221481298', name: 'johndoe' };
     getUserInfoStub.withArgs('U9221481298')
-      .returns(Promise.resolve(user));
+      .resolves(user);
 
     activeGameAlreadyExistsStub = sinon.stub(Slack, 'activeGameAlreadyExists');
     newGameCreatedStub = sinon.stub(Slack, 'newGameCreated');
@@ -170,7 +167,7 @@ describe('New Command', () => {
 
     it('should do nothing if an error occurs', (done) => {
       const getChannelStub = sinon.stub(Models.Channel, 'getChannel');
-      getChannelStub.returns(Promise.reject(new Error('Error in New')));
+      getChannelStub.rejects(new Error('Error in New'));
 
       New(validCommand)
       .then(() => {
