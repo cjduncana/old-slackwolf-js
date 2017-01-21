@@ -35,7 +35,17 @@ module.exports = function(db) {
               model: this.sequelize.models.User,
               as: 'user'
             }]
-          }]
+          }],
+          order: [
+            [
+              {
+                model: this.sequelize.models.Player,
+                as: 'players'
+              },
+              'createdAt',
+              'ASC'
+            ]
+          ]
         });
       },
 
@@ -61,6 +71,12 @@ module.exports = function(db) {
 
           return this.create({ channelId, initiatorId });
         });
+      }
+    },
+
+    instanceMethods: {
+      isOpen: function() {
+        return this.status === 'Open';
       }
     },
 

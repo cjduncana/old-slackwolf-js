@@ -3,6 +3,7 @@
 const Promise = require('bluebird');
 
 const Errors = require('../lib/errors');
+const Helpers = require('../lib/helpers');
 const Models = require('../lib/models');
 const Server = require('../lib/server');
 const Slack = require('../lib/slack');
@@ -12,7 +13,13 @@ module.exports = function({ args = [], channel: channelId, user: userId }) {
   const { Channel, Game, Player, User } = Models.getModels();
 
   if (args.length || !channelId || !userId) {
-    log.error(constructErrorMessage(args.length, !channelId, !userId));
+    const options = {
+      hasArguments: args.length,
+      missingChannel: !channelId,
+      missingUser: !userId
+    };
+
+    log.error(Helpers.constructErrorMessage(options));
     return Promise.resolve();
   }
 
@@ -50,36 +57,3 @@ module.exports = function({ args = [], channel: channelId, user: userId }) {
     return log.error(`The following error was encountered: "${err.message}".`);
   });
 };
-
-function constructErrorMessage(hasArguments, missingChannel, missingUser) {
-  const errors = [];
-
-  if (hasArguments) {
-    errors.push('arguments were given to this command');
-  }
-  if (missingChannel) {
-    errors.push('no Channel ID was provided');
-  }
-  if (missingUser) {
-    errors.push('no User ID was provided');
-  }
-
-  const message = [];
-
-  if (errors.length === 1) {
-    message.push('The following error was encountered: ');
-    message.push(errors.join('') + '.');
-  } else if (errors.length === 2) {
-    message.push('The following errors were encountered: ');
-    message.push(errors.join(' and ') + '.');
-  } else {
-    const errorQuantity = errors.length;
-    message.push('The following errors were encountered: ');
-    const commaSeparated = errors.slice(0, errorQuantity - 1);
-    message.push(commaSeparated.join(', ') + ', and ');
-    const lastError = errors[errorQuantity - 1];
-    message.push(lastError + '.');
-  }
-
-  return message.join('');
-}
