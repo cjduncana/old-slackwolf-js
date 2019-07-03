@@ -19,7 +19,9 @@
     "migrate:zero": "scripts/migrate --down --to 0 | node_modules/.bin/bunyan",
     "start": "node index.js | node_modules/.bin/bunyan",
     "test": "scripts/run_tests",
-    "test:debug": "scripts/debug_tests"
+    "test:debug": "scripts/debug_tests",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -45,7 +47,8 @@
     "sequelize": "^3.29.0",
     "sinon-as-promised": "^4.0.2",
     "slack-terminalize": "^1.0.2",
-    "umzug": "^1.11.0"
+    "umzug": "^1.11.0",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
@@ -53,5 +56,6 @@
     "mocha": "^3.2.0",
     "open": "0.0.5",
     "sinon": "^1.17.7"
-  }
+  },
+  "snyk": true
 }
